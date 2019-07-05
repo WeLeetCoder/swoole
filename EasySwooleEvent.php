@@ -13,6 +13,7 @@ use EasySwoole\EasySwoole\Swoole\EventRegister;
 use EasySwoole\EasySwoole\AbstractInterface\Event;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
+use App\Process\HotReload;
 
 class EasySwooleEvent implements Event
 {
@@ -26,6 +27,8 @@ class EasySwooleEvent implements Event
     public static function mainServerCreate(EventRegister $register)
     {
         // TODO: Implement mainServerCreate() method.
+        $swooleServer = ServerManager::getInstance()->getSwooleServer();
+        $swooleServer->addProcess((new HotReload('HotReload', ['disableInotify' => false]))->getProcess());
     }
 
     public static function onRequest(Request $request, Response $response): bool
