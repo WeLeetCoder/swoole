@@ -15,8 +15,7 @@ use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use App\Process\HotReload;
 use EasySwoole\EasySwoole\Crontab\Crontab;
-use App\Crontab\TaskOne;
-use EasySwoole\Component\Di;
+use App\Crontab\Check;
 
 class EasySwooleEvent implements Event
 {
@@ -34,7 +33,7 @@ class EasySwooleEvent implements Event
         // TODO: Implement mainServerCreate() method.
         $swooleServer = ServerManager::getInstance()->getSwooleServer();
         $swooleServer->addProcess((new HotReload('HotReload', ['disableInotify' => false]))->getProcess());
-        Crontab::getInstance()->addTask(TaskOne::class);
+        Crontab::getInstance()->addTask(Check::class);
     }
 
     public static function onRequest(Request $request, Response $response): bool

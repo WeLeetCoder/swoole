@@ -16,10 +16,19 @@ class Router extends AbstractRouter {
         });
 
         $routeCollector->addGroup('/api/v1', function(RouteCollector $api) {
-            $api->post('/query', '/api/QueryController');
+            $api->get('/query', '/api/QueryController');
             $api->post('/query/balance', '/api/QueryController/balance');
             $api->post('/query/ticker', '/api/QueryController/ticker');
             $api->post('/query/order', '/api/QueryController/order');
+            /**
+             * 一堆坑：
+             *      version:
+             *      password: 
+             */
+            $api->get('/', '/Index/index');
+            $api->get('/query/balance', '/api/QueryController/balance');
+            $api->get('/query/ticker', '/api/QueryController/ticker');
+            $api->get('/query/order', '/api/QueryController/order');
         });
     }
 }

@@ -4,7 +4,9 @@ namespace App\Crontab;
 
 use EasySwoole\EasySwoole\Crontab\AbstractCronTask;
 
-class TaskOne extends AbstractCronTask {
+use App\Common\InstanceList;
+
+class Check extends AbstractCronTask {
     public static function getRule(): string {
         return '* * * * *';
     }
@@ -16,7 +18,6 @@ class TaskOne extends AbstractCronTask {
 
     public static function run(\swoole_server $server, int $taskId, int $fromWorkerId, $flags = null)
     {
-        // var_dump($server, $taskId, $fromWorkerId, $flags);
-        // var_dump('run task one', time());
+        InstanceList::check();
     }
 }

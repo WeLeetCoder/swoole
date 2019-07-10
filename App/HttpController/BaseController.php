@@ -5,7 +5,6 @@ namespace App\HttpController;
 use EasySwoole\Http\AbstractInterface\Controller;
 
 abstract class BaseController extends Controller {
-    protected $user = [];
     function onRequest(?string $action): ?bool
     {
         /**
@@ -21,11 +20,15 @@ abstract class BaseController extends Controller {
          * 
          *      
          */
-        $this->response()->write('hell');
         return true;
     }
 
     protected function send($msg = null, $result = null, $statusCode = 0) {
         $this->writeJson($statusCode, $result, $msg);
+    }
+
+    public function use(\Closure $func)
+    {
+        return call_user_func($func, $this->request(), $this->response());
     }
 }

@@ -6,11 +6,14 @@ use App\Common\Code;
 use App\HttpController\BaseController;
 use App\Common\Query;
 use App\Common\InstanceList;
+use App\Common\Parser;
+use App\Validate\RequestValidate;
 
 class QueryController extends BaseController
 {
-    var $queryKey = null;
-    var $params = null;
+    private $queryInstance = null;
+    public $params = null;
+
     function onRequest(?string $action): ?bool
     {
         /**
@@ -18,67 +21,82 @@ class QueryController extends BaseController
          * 需要一个参数解析器，从请求中解析数据，给后面使用。
          * 这里返回为 false 的时候会被拦截。
          */
-        $apiKeys = $this->json();
-        $this->params = $apiKeys;
-        ['exchange' => $exchange, 'apiKey' => $apiKey, 'secret' => $secretKey, 'nonce' => $nonce, 'timestamp' => $timestamp] = $apiKeys;
-        if (!($nonce && $timestamp)) {
-            $this->writeJson(Code::PARAM_ERROR, null, '缺少时间戳以及随机数');
+
+        /**
+         * Parser => Validate => ProcessRequest
+         */
+
+        parent::onRequest($action);
+
+        $requiredParams = ['exchange', 'apiKey', 'secretKey'];
+
+        // 解析，看看能否解析
+        $this->params = $this->use(Parser::json($requiredParams));
+        // $this->use(RequestValidate::validate($this->params));
+
+        if ($this->response()->isEndResponse()) {
             return false;
         }
-        $this->queryMap = InstanceList::getInstance();
 
-        $this->queryKey = md5($exchange . $apiKey . $secretKey);
-
-        // 判断 instanceList 中是否有这么个 key
-        if ($this->queryMap->hasKey($this->queryKey)) {
-            return true;
+        [
+            'exchange' => $exchange,
+            'apiKey' => $apiKey,
+            'secretKey' => $secretKey
+        ] = $this->params;
+        
+        // 判断是否有该交易所
+        if (!Query::has_exchange($exchange)) {
+            $this->writeJson(Code::PARAM_ERROR, null, '交易所不存在！');
+            return false;
         }
 
-        // 判断交易所是否存在
-        if (Query::has_exchange($exchange)) {
-            // 如果交易所存在则创建 query，并将query加入到 instanceList 中
-            $query = new Query($apiKeys);
-            $this->queryMap->addInstance($this->queryKey, $query);
+        $queryMap = InstanceList::getInstance();
+        $queryKey = md5($exchange . $apiKey . $secretKey);
+        
+        // 判断是已经有了，有则直接使用，无则创建
+        if ($queryMap->hasKey($queryKey)) {
+            $this->queryInstance->updateTimestamp();
+            $this->queryInstance = $queryMap->getQuery($queryKey);
             return true;
         }
-
-        $this->writeJson(Code::PARAM_ERROR, null, '交易所不存在！');
-        return false;
+        
+        // 创建，并加入
+        $queryInstance = Query::createQuery($this->params);
+        $queryMap->addInstance($queryKey, $queryInstance);
+        $this->queryInstance = $queryMap->getQuery($queryKey);
+        return true;
     }
 
     function index()
     {
-        $this->reply_success($this->queryMap->getCount(), '获取成功！');
+        $this->send('获取成功！', InstanceList::getInstance()->getCount());
     }
 
     function balance(): void
     {
-        $query_list = InstanceList::getInstance();
-        $query = $query_list->getQuery($this->queryKey);
-        $this->reply_success($query->balance(), '获取成功！');
+        $this->send('获取成功！', $this->queryInstance->balance());
     }
 
     function order()
     {
-        $query_list = InstanceList::getInstance();
-        $query = $query_list->getQuery($this->queryKey);
-        $this->reply_success($query->load(), '获取成功！');
+        $this->send('获取成功！', $this->queryInstance->order($this->params['symbol']));
     }
 
     function ticker()
     {
-        $query_list = InstanceList::getInstance();
-        $query = $query_list->getQuery($this->queryKey);
-        $this->send('获取成功！', $query->ticker($this->params['symbol']));
-    }
-
-    function reply_success($result = null, $msg = null)
-    {
-        $this->writeJson(Code::SUCCESS, $result, $msg);
+        $this->send('获取成功！', $this->queryInstance->ticker($this->params['symbol']));
     }
 
     function onException(\Throwable $throwable): void
     {
-        $this->response()->write($throwable->getMessage());
+        $errorMsg = $throwable->getMessage();
+        $this->response()->write($errorMsg);
+        // $spaceIndex = strpos($errorMsg, " ");
+        // $msg = json_decode(substr($errorMsg, $spaceIndex + 1), true);
+        // $msg['exchange'] = substr($errorMsg, 0, $spaceIndex);
+        // $this->send($msg, true);
+    }
+    function rsp() {
+        return $this->response();
     }
 }
