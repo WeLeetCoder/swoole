@@ -5,6 +5,7 @@
         }
     },
     "require": {
-        "easyswoole/easyswoole": "3.x"
+        "easyswoole/easyswoole": "3.x",
+        "ccxt/ccxt": "^1.18.0"
     }
 }

@@ -14,14 +14,19 @@ use EasySwoole\EasySwoole\AbstractInterface\Event;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use App\Process\HotReload;
+use EasySwoole\EasySwoole\Crontab\Crontab;
+use App\Crontab\TaskOne;
+use EasySwoole\Component\Di;
 
 class EasySwooleEvent implements Event
 {
-
+    static $query = [];
     public static function initialize()
     {
         // TODO: Implement initialize() method.
         date_default_timezone_set('Asia/Shanghai');
+        putenv('http_proxy=http://127.0.0.1:1081');
+        putenv('https_proxy=http://127.0.0.1:1081');
     }
 
     public static function mainServerCreate(EventRegister $register)
@@ -29,6 +34,7 @@ class EasySwooleEvent implements Event
         // TODO: Implement mainServerCreate() method.
         $swooleServer = ServerManager::getInstance()->getSwooleServer();
         $swooleServer->addProcess((new HotReload('HotReload', ['disableInotify' => false]))->getProcess());
+        Crontab::getInstance()->addTask(TaskOne::class);
     }
 
     public static function onRequest(Request $request, Response $response): bool
