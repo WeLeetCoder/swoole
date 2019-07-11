@@ -23,5 +23,7 @@ return [
         ],
     ],
     'TEMP_DIR' => null,
-    'LOG_DIR' => null
+    'LOG_DIR' => null,
+    'MODE' => getenv('MODE') ?: 'DEV',
+    'AES_KEY' => getenv('ENCRPTY_KEY') ?: ''
 ];

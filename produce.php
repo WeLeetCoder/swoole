@@ -23,5 +23,6 @@ return [
         ],
     ],
     'TEMP_DIR' => null,
-    'LOG_DIR' => null
+    'LOG_DIR' => null,
+    'MODE' => putenv('MODE') ?: 'PRODUCT'
 ];

@@ -23,7 +23,7 @@ class Query
         $conf = [
             'apiKey' =>  $apiKey,
             'secret' =>  $secretKey,
-            // // 'verbose' => true,
+            // 'verbose' => true,
         ];
 
         if (isset($opts['password'])) {
@@ -51,8 +51,10 @@ class Query
     }
 
     function balance()
-    {
-        return $this->queryInstance->fetch_balance();
+    {   
+        $data = $this->queryInstance->fetch_balance();
+        unset($data['info']);
+        return $data;
     }
 
     function ticker(string $currency_name)

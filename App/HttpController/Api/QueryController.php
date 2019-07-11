@@ -8,6 +8,8 @@ use App\Common\Query;
 use App\Common\InstanceList;
 use App\Common\Parser;
 use App\Validate\RequestValidate;
+use EasySwoole\EasySwoole\Config;
+use App\Common\GenKey;
 
 class QueryController extends BaseController
 {
@@ -27,11 +29,10 @@ class QueryController extends BaseController
          */
 
         parent::onRequest($action);
-
         $requiredParams = ['exchange', 'apiKey', 'secretKey'];
 
         // 解析，看看能否解析
-        $this->params = $this->use(Parser::json($requiredParams));
+        $this->params = $this->use(Parser::queryString($requiredParams));
         // $this->use(RequestValidate::validate($this->params));
 
         if ($this->response()->isEndResponse()) {
@@ -43,7 +44,9 @@ class QueryController extends BaseController
             'apiKey' => $apiKey,
             'secretKey' => $secretKey
         ] = $this->params;
-        
+
+        var_dump("->", $this->params);
+
         // 判断是否有该交易所
         if (!Query::has_exchange($exchange)) {
             $this->writeJson(Code::PARAM_ERROR, null, '交易所不存在！');
@@ -52,51 +55,50 @@ class QueryController extends BaseController
 
         $queryMap = InstanceList::getInstance();
         $queryKey = md5($exchange . $apiKey . $secretKey);
-        
+
         // 判断是已经有了，有则直接使用，无则创建
         if ($queryMap->hasKey($queryKey)) {
             $this->queryInstance->updateTimestamp();
             $this->queryInstance = $queryMap->getQuery($queryKey);
             return true;
         }
-        
+
         // 创建，并加入
         $queryInstance = Query::createQuery($this->params);
         $queryMap->addInstance($queryKey, $queryInstance);
         $this->queryInstance = $queryMap->getQuery($queryKey);
+
         return true;
     }
 
     function index()
     {
-        $this->send('获取成功！', InstanceList::getInstance()->getCount());
+        $this->success('获取成功！', InstanceList::getInstance()->getCount());
     }
 
     function balance(): void
     {
-        $this->send('获取成功！', $this->queryInstance->balance());
+        $this->success('获取成功！', $this->queryInstance->balance());
     }
 
     function order()
     {
-        $this->send('获取成功！', $this->queryInstance->order($this->params['symbol']));
+        $this->success('获取成功！', $this->queryInstance->order($this->params['symbol']));
     }
 
-    function ticker()
-    {
-        $this->send('获取成功！', $this->queryInstance->ticker($this->params['symbol']));
-    }
 
     function onException(\Throwable $throwable): void
     {
+        $conf = Config::getInstance();
+        if ($conf->getConf('MODE') === 'DEV') {
+            parent::onException($throwable);
+            return;
+        }
+
         $errorMsg = $throwable->getMessage();
-        $this->response()->write($errorMsg);
-        // $spaceIndex = strpos($errorMsg, " ");
-        // $msg = json_decode(substr($errorMsg, $spaceIndex + 1), true);
-        // $msg['exchange'] = substr($errorMsg, 0, $spaceIndex);
-        // $this->send($msg, true);
-    }
-    function rsp() {
-        return $this->response();
+        $spaceIndex = strpos($errorMsg, " ");
+        $msg = json_decode(substr($errorMsg, $spaceIndex + 1), true);
+        $msg['exchange'] = substr($errorMsg, 0, $spaceIndex);
+        $this->error($msg);
     }
 }

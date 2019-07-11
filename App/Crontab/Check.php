@@ -18,6 +18,7 @@ class Check extends AbstractCronTask {
 
     public static function run(\swoole_server $server, int $taskId, int $fromWorkerId, $flags = null)
     {
-        InstanceList::check();
+        
+        // InstanceList::check();
     }
 }

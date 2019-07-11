@@ -16,10 +16,9 @@ class RequestValidate extends BaseValidate {
          * 模块是独立的吗？
          * 传输什么东西过来？做验证，然后验证完成之后怎么处理？ 验证是否通过。
          */
-        return function (Request $request, Response $response) use ($params) {
 
+        return function (Request $request, Response $response) use ($params) {
             if ($response->isEndResponse()) {
-                // error
                 return false;
             }
             $timestamp = $params['timestamp'] ?? 0;
@@ -27,17 +26,14 @@ class RequestValidate extends BaseValidate {
             if ($timestamp && $nonce) {
                 $nowTimestamp = time();
                 if (abs($nowTimestamp - $timestamp) > 60) {
-                    $response->write('nono');
+                    $response->write("timestamp is error.");
                     $response->end();
                     return false;
                 } 
             }
-
-            foreach ($params as $param) {
-                if (!strlen($param)) {
-                    $response->write("oh, no");
-                }
-            }
+            $response->write("must be have 2 params timestamp and nonce.");
+            $response->end();
+            return false;
         };
     }
 

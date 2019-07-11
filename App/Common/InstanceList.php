@@ -7,7 +7,7 @@ use EasySwoole\Component\Singleton;
 class InstanceList {
     use Singleton;
     private $queryInstances = [];
-
+    var $a = 100;
     function addInstance(string $name, $instance) {
         $this->queryInstances[$name] = $instance;
     }
@@ -43,12 +43,21 @@ class InstanceList {
         // var_dump($this->queryInstances);
     }
 
+    function set($val) {
+        $this->a = $val;
+    }
+
+    function get() {
+        return $this->a;
+    }
+    
     static function check() {
-        var_dump(time() . " check Instance");
-        self::getInstance()->checkInvalidRequest();
+        // var_dump(self::getInstance()->all());
     }
 
     function all() {
-        return $this->queryInstances;
+        $instance = $this->queryInstances;
+        $instance['timestamp'] = time();
+        return $instance;
     }
 }

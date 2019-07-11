@@ -7,28 +7,26 @@ use FastRoute\RouteCollector;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 
-class Router extends AbstractRouter {
+class Router extends AbstractRouter
+{
     function initialize(RouteCollector $routeCollector)
     {
-        $this->setGlobalMode(true);
-        $routeCollector->get('/', function (Request $request, Response $response) {
-            $response->withStatus(403);
+        // fake data
+        $routeCollector->addGroup('/v1', function (RouteCollector $api) { 
+            $api->get('/query', '/api/FakeQueryController');
+            $api->get('/query/balance', '/api/FakeQueryController/balance');
         });
 
-        $routeCollector->addGroup('/api/v1', function(RouteCollector $api) {
-            $api->get('/query', '/api/QueryController');
-            $api->post('/query/balance', '/api/QueryController/balance');
-            $api->post('/query/ticker', '/api/QueryController/ticker');
-            $api->post('/query/order', '/api/QueryController/order');
-            /**
-             * 一堆坑：
-             *      version:
-             *      password: 
-             */
-            $api->get('/', '/Index/index');
+        // dev api
+        $routeCollector->addGroup('/v1/dev', function (RouteCollector $api) {
             $api->get('/query/balance', '/api/QueryController/balance');
-            $api->get('/query/ticker', '/api/QueryController/ticker');
             $api->get('/query/order', '/api/QueryController/order');
+        });
+
+        $this->setGlobalMode(true);
+        $this->setRouterNotFoundCallBack(function (Request $request, Response $response) {
+            $response->withStatus(404);
+            $response->write("page is not found.");
         });
     }
 }

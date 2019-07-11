@@ -3,8 +3,10 @@
 namespace App\HttpController;
 
 use EasySwoole\Http\AbstractInterface\Controller;
+use App\Common\Code;
 
-abstract class BaseController extends Controller {
+abstract class BaseController extends Controller
+{
     function onRequest(?string $action): ?bool
     {
         /**
@@ -23,12 +25,48 @@ abstract class BaseController extends Controller {
         return true;
     }
 
-    protected function send($msg = null, $result = null, $statusCode = 0) {
-        $this->writeJson($statusCode, $result, $msg);
+    protected function send($msg, $status, $data)
+    {
+        if (!$this->response()->isEndResponse()) {
+            $responseBody = [
+                'status' => Code::status($status),
+                'ts' => round(microtime(true), 3) * 1000,
+                'msg' => $msg,
+                'code' => Code::msg($status),
+                'data' => $data,
+            ];
+            
+            $this->response()->withStatus(200);
+            $this->response()->write(json_encode($responseBody, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+            $this->response()->withHeader('Content-type', 'application/json;charset=utf-8');
+            return true;
+        }
+
+        return false;
     }
 
-    public function use(\Closure $func)
+    public function error($msg, $status = Code::ERROR, $data = null)
+    {
+        return $this->send($msg, $status ?? Code::ERROR, $data);
+    }
+
+    public function success($msg, $data = null)
+    {
+        return $this->send($msg, Code::SUCCESS, $data);
+    }
+
+    protected function use(\Closure $func)
     {
         return call_user_func($func, $this->request(), $this->response());
+    }
+
+    function onException(\Throwable $throwable): void
+    {
+        $msg = [
+            'message' => $throwable->getMessage(),
+            'file' => $throwable->getFile(),
+            'line' => $throwable->getLine(),
+        ];
+        $this->error("异常捕获", null, $msg);
     }
 }
