@@ -2,27 +2,32 @@
 
 namespace App\HttpController\Api;
 
-use App\Common\Code;
-use App\Common\GenKey;
+use App\Utils\Code;
+use App\Utils\GenKey;
+use Predis\Client;
+use App\Common\Redis;
 
 class FakeQueryController extends QueryController
 {
     function onRequest(?string $action): ?bool
     {
+        parent::onRequest($action);
+        if ($this->response()->isEndResponse()) {
+            return false;
+        }
         return true;
     }
 
     function index()
+    { }
+
+    function balance(): void
     {
-        
-        $this->error("测试失败");
+        parent::balance();
     }
 
-    function b(): void
-    {
-        GenKey::getInstance()->genKey(OPENSSL_CIPHER_AES_256_CBC);
-        $en = GenKey::encrypt("fuck you mother", GenKey::getInstance()->exportPublic());
-        $de = GenKey::decrypt($en, GenKey::getInstance()->exportPrivate());
-        $this->success('请求成功', $de);
+    function order()
+    { 
+        parent::order();
     }
 }

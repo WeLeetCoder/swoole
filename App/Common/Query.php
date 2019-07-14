@@ -8,35 +8,35 @@ class Query
 {
     public $timestamp = null;
     private $queryInstance = null;
-    public $queryKey = null;
 
-    function __construct($opts = null)
+    function __construct($opts)
     {
-        var_dump('create new obj');
 
-        [
-            'exchange' => $exchange,
-            'apiKey' => $apiKey,
-            'secretKey' => $secretKey
-        ] = $opts;
-        
         $conf = [
-            'apiKey' =>  $apiKey,
-            'secret' =>  $secretKey,
+            'apiKey' => $opts['apiKey'],
+            'secret' => $opts['secretKey'],
+            'userAgent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) snap Chromium/75.0.3770.100 Chrome/75.0.3770.100 Safari/537.36',
             // 'verbose' => true,
+            'enableRateLimit' => true,
         ];
 
-        if (isset($opts['password'])) {
-            ['password' => $conf['password']] = $opts;
+        $reParams = [
+            'password',
+            'version',
+        ];
+
+        
+        foreach ($reParams as $paramName) {
+            if (isset($opts[$paramName])) {
+                $conf[$paramName] = $opts[$paramName];
+            }
         }
 
-        if (isset($opts['version'])) {
-            ['version' => $conf['version']] = $opts;
-        }
-
-        $exchange_cls = "ccxt\\{$exchange}";
+        /**
+         * 创建对象
+         */
+        $exchange_cls = "ccxt\\{$opts['exchange']}";
         $this->queryInstance = new $exchange_cls($conf);
-        $this->queryKey = md5($exchange . $apiKey . $secretKey);
         $this->updateTimeStamp();
     }
 
@@ -51,28 +51,36 @@ class Query
     }
 
     function balance()
-    {   
+    {
         $data = $this->queryInstance->fetch_balance();
+        var_dump($data);
         unset($data['info']);
         return $data;
     }
 
-    function ticker(string $currency_name)
+    function ticker(string $symbol)
     {
-        return $this->queryInstance->fetch_ticker($currency_name);
+        return $this->queryInstance->fetch_ticker($symbol);
     }
 
-    function order(string $currency_name)
+    function order($id, string $symbol)
     {
-        return $this->queryInstance->fetch_order_book($currency_name);
+        return $this->queryInstance->fetch_order($id, $symbol);
+    }
+
+    function orders(string $symbol)
+    {
+
+        return $this->queryInstance->fetch_orders($symbol);
     }
 
     function load()
     {
-        return $this->queryInstance->loadMarkets();
+        return $this->queryInstance->load_markets();
     }
 
-    function updateTimeStamp() {
+    function updateTimeStamp()
+    {
         $this->timestamp = time();
     }
 }

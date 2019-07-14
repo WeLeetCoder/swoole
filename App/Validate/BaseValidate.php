@@ -2,7 +2,11 @@
 
 namespace App\Validate;
 
-class BaseValidate {
+use App\Utils\Encrypt\Encrypt;
+use EasySwoole\EasySwoole\Config;
+
+class BaseValidate
+{
 
     /**
      * @param array $data 签名的数据
@@ -13,14 +17,20 @@ class BaseValidate {
     /**
      * 可能出现 api key 没有权限的情况，那么在哪里处理呢？
      */
-    public static function sign(array $data, $algo='md5') {
-        $sign_str = '';
-        ksort($data);
+    public static function sign(string $data)
+    {
+        $conf = Config::getInstance();
+        $Encrypt = $conf->getConf('AES_ENCRYPT');
+        ['AES_ALG' => $alg, 'AES_KEY' => $key, 'AES_IV' => $iv] = $Encrypt;
+        return base64_encode(Encrypt::create($alg, $key, $iv)->encrypt($data));
+    }
 
-        foreach ($data as $value) {
-            $sign_str .= $value;
-        }
-
-        return hash($algo, $sign_str);
+    public static function decrypt(string $data)
+    {
+        $conf = Config::getInstance();
+        $Encrypt = $conf->getConf('AES_ENCRYPT');
+        var_dump($Encrypt);
+        ['AES_ALG' => $alg, 'AES_KEY' => $key, 'AES_IV' => $iv] = $Encrypt;
+        return Encrypt::create($alg, $key, $iv)->decrypt($data);
     }
 }

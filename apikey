@@ -1,0 +1,4 @@
+export hostName=localhost
+export port=9501
+export apiKey=44MUGkimQfI6S31a3MGHm3ZWeh9Q012kaBMLhYoIzedh3OBnqDl2WB5YFOtEqqbS
+export secretKey=IaDJHMkjqzXCumx1PxCGk1aE22rDcSWGVXxlLmqlblKMp6bNUMLxPpTUC12UkBte

@@ -7,9 +7,14 @@ use EasySwoole\Component\Singleton;
 class InstanceList {
     use Singleton;
     private $queryInstances = [];
+    private $symbols = [];
     var $a = 100;
     function addInstance(string $name, $instance) {
         $this->queryInstances[$name] = $instance;
+    }
+
+    function addSymbol($exchange, $symbol) {
+        // Todo 所有的 symbol，不同交易所的 symbol 
     }
 
     function getCount() {
@@ -33,14 +38,13 @@ class InstanceList {
          * 检查时间戳
          */
         if ($this->getCount() > 0) {
-            foreach ($this->queryInstances as $queryInstance) {
+            foreach ($this->queryInstances as $queryKey => $queryInstance) {
                 $nowTimestamp = time();
                 if (abs($nowTimestamp - $queryInstance->timestamp) > 10) {
-                    $this->unset($queryInstance->queryKey);
+                    $this->unset($queryKey);
                 }
             }
         }
-        // var_dump($this->queryInstances);
     }
 
     function set($val) {

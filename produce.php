@@ -5,12 +5,13 @@
  * Date: 2019-01-01
  * Time: 20:06
  */
+$devConf = require('./dev.php');
 
-return [
+$proConf = [
     'SERVER_NAME' => "EasySwoole",
     'MAIN_SERVER' => [
         'LISTEN_ADDRESS' => '0.0.0.0',
-        'PORT' => 9501,
+        'PORT' => 8008,
         'SERVER_TYPE' => EASYSWOOLE_WEB_SERVER, //可选为 EASYSWOOLE_SERVER  EASYSWOOLE_WEB_SERVER EASYSWOOLE_WEB_SOCKET_SERVER,EASYSWOOLE_REDIS_SERVER
         'SOCK_TYPE' => SWOOLE_TCP,
         'RUN_MODEL' => SWOOLE_PROCESS,
@@ -24,5 +25,15 @@ return [
     ],
     'TEMP_DIR' => null,
     'LOG_DIR' => null,
-    'MODE' => putenv('MODE') ?: 'PRODUCT'
+    'MODE' => putenv('MODE') ?: 'PRODUCE',
+    // 'AES_ENCRYPT' => require('./App/Config/encrpty.php'),
+    // 'REDIS' => require('./App/Config/redis.php'),
 ];
+
+$Conf = $devConf;
+
+foreach($proConf as $key => $val) {
+    $Conf[$key] = $val;
+}
+
+return $Conf;

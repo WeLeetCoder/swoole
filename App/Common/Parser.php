@@ -10,17 +10,17 @@ class Parser
     /**
      * 用来解析传输过来的参数，传过来的参数需要有哪些东西？
      */
-    private static function requeredParamsCheck(array $requiredParams, $params, Response $response)
-    {   
+    public static function requiredParamsCheck(array $requiredParams, $params, Response $response)
+    {
         if (!count($params)) {
-            $response->write("neede param.");
+            $response->write("require params.");
             $response->end();
             return false;
         }
         foreach ($requiredParams as $requiredParam) {
-            if (!isset($params[$requiredParam]) || $params[$requiredParam] ==='') {
-                $response->withStatus(400);
+            if (!isset($params[$requiredParam]) || $params[$requiredParam] === '') {
                 $response->write("neede param `$requiredParam` not exist.");
+                $response->withStatus(400);
                 $response->end();
                 return false;
             }
@@ -28,21 +28,29 @@ class Parser
         return true;
     }
 
-    static function json(array $requiredParams = [])
+    static function rawString(array $requiredParams = [], $check = false)
     {
-        return function (Request $request, Response $response) use ($requiredParams) {
+        return function (Request $request, Response $response) use ($requiredParams, $check) {
             $params = json_decode($request->getBody()->__toString(), true) ?: [];
-            self::requeredParamsCheck($requiredParams, $params, $response);
+            if ($check) {
+                self::requiredParamsCheck($requiredParams, $params, $response);
+            }
             return $params;
         };
     }
 
-    static function queryString(array $requiredParams = [])
+    static function queryString(array $requiredParams = [], $check = false)
     {
-        return function (Request $request, Response $response) use ($requiredParams) {
+        return function (Request $request, Response $response) use ($requiredParams, $check) {
             $params = $request->getQueryParams();
-            self::requeredParamsCheck($requiredParams, $params, $response);
+            if ($check) {
+                self::requiredParamsCheck($requiredParams, $params, $response);
+            }
             return $params;
         };
+    }
+
+    static function requestParams() {
+        return 
     }
 }
